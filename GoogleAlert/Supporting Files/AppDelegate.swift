@@ -9,7 +9,8 @@
 import UIKit
 import GoogleMaps
 
-let googleApiKey = "AIzaSyAXKmKMBVJ85i8TPxSqPYIXzOdwENIeC-4"
+// Insert Google API here
+let googleApiKey = "API_KEY"
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
