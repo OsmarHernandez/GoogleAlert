@@ -14,10 +14,8 @@ class MapViewController: UIViewController {
     var emergencyColor: UIColor!
     
     private var searchedLocation: CLLocationCoordinate2D?
-    
     private let locationManager = CLLocationManager()
-    
-    private let searchRadius: Double = 1000
+    private let searchRadius: Double = 250
     
     @IBOutlet weak var emergencyTypeLabel: UILabel!
     
@@ -52,7 +50,7 @@ class MapViewController: UIViewController {
             return
         }
         
-        let circle = GMSCircle(position: location, radius: 100)
+        let circle = GMSCircle(position: location, radius: searchRadius)
         circle.fillColor = emergencyColor.withAlphaComponent(0.45)
         circle.strokeColor = emergencyColor
         circle.map = mapView

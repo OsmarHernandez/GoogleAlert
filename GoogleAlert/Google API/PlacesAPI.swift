@@ -10,11 +10,17 @@ import Foundation
 import GoogleMaps
 
 struct PlaecesAPI {
-    public static func searchInGoogleMaps(place: String, updates: @escaping (_ latitud: CLLocationDegrees, _ longitud: CLLocationDegrees) -> Void) {
-        var strGoogleApi = "https://maps.googleapis.com/maps/api/place/textsearch/json?query=\(place)&key=\(googleApiKey)"
-        strGoogleApi = strGoogleApi.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
+    private static let baseURLString = "https://maps.googleapis.com/maps/api/place/textsearch"
+    
+    private static func url(_ place: String) -> URL {
+        var stringURL = "\(baseURLString)/json?query=\(place)&key=\(googleApiKey)"
+        stringURL = stringURL.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
         
-        let url = URL(string: strGoogleApi)!
+        return URL(string: stringURL)!
+    }
+    
+    public static func searchInGoogleMaps(place: String, completion: @escaping (_ latitud: CLLocationDegrees, _ longitud: CLLocationDegrees) -> Void) {
+        let url = self.url(place)
         
         var urlRequest = URLRequest(url: url)
         urlRequest.httpMethod = "GET"
@@ -23,22 +29,10 @@ struct PlaecesAPI {
             (data, response, error) in
             
             if error == nil {
-                DispatchQueue.global(qos: .userInitiated).async {
-                    let jsonDict = try? JSONSerialization.jsonObject(with: data!, options: .mutableContainers)
-                    if let dictionary = jsonDict as? [String : Any] {
-                        if let results = dictionary["results"] as? [Any], results.count > 0 {
-                            if let result = results[0] as? [String : Any] {
-                                if let geometry = result["geometry"] as? [String : Any] {
-                                    if let location = geometry["location"] as? [String : Any] {
-                                        if let lat = location["lat"] as? CLLocationDegrees, let lng = location["lng"] as? CLLocationDegrees {
-                                            DispatchQueue.main.async {
-                                                updates(lat, lng)
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                if let data = data {
+                    let (latitude, longitude) = position(data: data)
+                    OperationQueue.main.addOperation {
+                        completion(latitude, longitude)
                     }
                 }
             } else {
@@ -47,5 +41,25 @@ struct PlaecesAPI {
         }
         
         task.resume()
+    }
+    
+    private static func position(data: Data) -> (CLLocationDegrees, CLLocationDegrees) {
+        var latitud: CLLocationDegrees = 0.0
+        var longigude: CLLocationDegrees = 0.0
+        
+        let jsonDict = try? JSONSerialization.jsonObject(with: data, options: .mutableContainers)
+        
+        if let dictionary = jsonDict as? [String : Any] {
+            if let results = dictionary["results"] as? [Any], results.count > 0 {
+                let result = results[0] as! [String : Any]
+                let geometry = result["geometry"] as! [String : Any]
+                let location = geometry["location"] as! [String : Any]
+                
+                latitud = location["lat"] as! CLLocationDegrees
+                longigude = location["lng"] as! CLLocationDegrees
+            }
+        }
+        
+        return (latitud, longigude)
     }
 }

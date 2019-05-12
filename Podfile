@@ -6,7 +6,7 @@ target 'GoogleAlert' do
   use_frameworks!
 
   # Pods for GoogleAlert
-  pod 'SwiftyJSON'
+  pod 'SwiftyJSON', '~> 4.2'
   pod 'GoogleMaps'
 
 end
